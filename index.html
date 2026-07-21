@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>حفظ القرءان</title>
+<meta name="theme-color" content="#0B2436">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B2436;
+    --navy-light:#123249;
+    --emerald:#1F6F54;
+    --emerald-light:#2C8F6D;
+    --gold:#C9A227;
+    --sand:#F7F5F0;
+    --ink:#0B2436;
+    --muted:#6B7A82;
+    --danger:#B5533C;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--sand);
+    color:var(--ink);
+    font-family:'Cairo',sans-serif;
+    min-height:100vh;
+    padding-bottom:32px;
+  }
+  header{
+    background:linear-gradient(160deg,var(--navy) 0%, var(--navy-light) 100%);
+    color:#fff;
+    padding:28px 20px 22px;
+    border-radius:0 0 28px 28px;
+    position:relative;
+    overflow:hidden;
+  }
+  header::after{
+    content:"";
+    position:absolute;
+    left:-40px; top:-40px;
+    width:160px; height:160px;
+    border-radius:50%;
+    background:var(--emerald);
+    opacity:.25;
+  }
+  h1{
+    font-family:'Amiri',serif;
+    font-size:2rem;
+    margin:0 0 4px;
+    position:relative;
+  }
+  .subtitle{
+    color:#BFD3D9;
+    font-size:.9rem;
+    margin:0;
+    position:relative;
+  }
+  #installBtn{
+    margin-top:16px;
+    background:var(--gold);
+    color:var(--navy);
+    border:none;
+    padding:10px 18px;
+    border-radius:999px;
+    font-family:'Cairo',sans-serif;
+    font-weight:700;
+    font-size:.85rem;
+    cursor:pointer;
+    display:none;
+    position:relative;
+  }
+  #installBtn.show{display:inline-block;}
+
+  .tabs{
+    display:flex;
+    gap:8px;
+    padding:16px 16px 4px;
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{
+    flex:0 0 auto;
+    padding:8px 16px;
+    border-radius:999px;
+    background:#fff;
+    border:1px solid #E3DFD4;
+    color:var(--muted);
+    font-size:.85rem;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .tab.active{
+    background:var(--emerald);
+    border-color:var(--emerald);
+    color:#fff;
+  }
+
+  main{padding:8px 16px 0;}
+  .card{
+    background:#fff;
+    border-radius:18px;
+    padding:16px;
+    margin-bottom:12px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    box-shadow:0 1px 3px rgba(11,36,54,.06);
+  }
+  .ring{flex:0 0 auto;}
+  .card-body{flex:1; min-width:0;}
+  .card-title{
+    font-weight:700;
+    font-size:.98rem;
+    margin:0 0 6px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .chips{display:flex; gap:6px; flex-wrap:wrap;}
+  .chip{
+    font-size:.72rem;
+    padding:3px 9px;
+    border-radius:999px;
+    background:#EFF3F1;
+    color:var(--emerald);
+    font-weight:600;
+  }
+  .chip.day{background:#F1ECDD; color:#8A6D1E;}
+
+  .empty{
+    text-align:center;
+    color:var(--muted);
+    padding:40px 20px;
+    font-size:.9rem;
+  }
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:.75rem;
+    padding:24px 20px 0;
+  }
+  footer code{
+    background:#EFEBE1;
+    padding:2px 6px;
+    border-radius:6px;
+  }
+  .status-dot{
+    display:inline-block;
+    width:8px; height:8px;
+    border-radius:50%;
+    background:var(--gold);
+    margin-inline-end:6px;
+  }
+  .status-dot.live{background:var(--emerald-light);}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>حفظ القرءان</h1>
+  <p class="subtitle" id="statusLine"><span class="status-dot"></span>بيانات تجريبية محلية — لم يتم الربط بعد مع Notion</p>
+  <button id="installBtn">📲 تثبيت التطبيق</button>
+</header>
+
+<div class="tabs" id="tabs"></div>
+
+<main id="cards"></main>
+
+<footer>
+  يعمل بدون إنترنت بعد أول تحميل · لربط بيانات Notion الحقيقية عدّل <code>API_BASE</code> في index.html
+</footer>
+
+<script>
+const API_BASE = "";
+
+const SAMPLE_DATA = [
+  { name: "النساء-المائدة الربع (42) “و الله يشهد بما انزل اليك”", tags: ["مرة في الاسبوعين"], days: ["ثلاثاء"], score: 3 },
+  { name: "المائدة الربع (48) “ياأيها الرسول بلغ ما انزل اليك”", tags: ["اعادة الحفظ"], days: ["احد"], score: 12 },
+  { name: "النساء الربع (36)”فليقاتل في السبيل ”", tags: ["تكرار يومي"], days: ["اثنين","ثلاثاء","اربعاء"], score: 28 },
+  { name: "الكهف الربع (118)", tags: ["مرة في الشهر"], days: ["خميس"], score: 34 },
+  { name: "مريم الربع (124)", tags: ["التكرار مرة اسبوعيا"], days: ["سبت"], score: 20 },
+  { name: "الحج (136) “ذلك و من عاقب”", tags: ["في الانتظار"], days: [], score: 6 },
+];
+
+const MAX_SCORE = 36;
+
+function crescentRing(score, size=54){
+  const pct = Math.max(0, Math.min(1, score / MAX_SCORE));
+  const r = size/2 - 5;
+  const c = 2 * Math.PI * r;
+  const offset = c * (1 - pct);
+  const color = pct >= 0.75 ? 'var(--emerald)' : pct >= 0.4 ? 'var(--gold)' : 'var(--danger)';
+  return `
+  <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="ring">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#EDEAE1" stroke-width="5"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="5"
+      stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${offset}"
+      transform="rotate(-90 ${size/2} ${size/2})"/>
+    <text x="50%" y="53%" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ink)" font-family="Cairo">${score}</text>
+  </svg>`;
+}
+
+function render(items, filter){
+  const list = filter === "الكل" ? items : items.filter(i => i.tags.includes(filter));
+  const wrap = document.getElementById("cards");
+  if(!list.length){
+    wrap.innerHTML = `<div class="empty">لا توجد عناصر في هذا التصنيف بعد</div>`;
+    return;
+  }
+  wrap.innerHTML = list.map(item => `
+    <div class="card">
+      ${crescentRing(item.score)}
+      <div class="card-body">
+        <p class="card-title">${item.name}</p>
+        <div class="chips">
+          ${item.tags.map(t=>`<span class="chip">${t}</span>`).join("")}
+          ${item.days.map(d=>`<span class="chip day">${d}</span>`).join("")}
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderTabs(items){
+  const tags = ["الكل", ...new Set(items.flatMap(i=>i.tags))];
+  const wrap = document.getElementById("tabs");
+  wrap.innerHTML = tags.map((t,i)=>`<div class="tab ${i===0?'active':''}" data-tag="${t}">${t}</div>`).join("");
+  wrap.querySelectorAll(".tab").forEach(tab=>{
+    tab.addEventListener("click", ()=>{
+      wrap.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+      tab.classList.add("active");
+      render(items, tab.dataset.tag);
+    });
+  });
+}
+
+async function loadData(){
+  if(API_BASE){
+    try{
+      const res = await fetch(`${API_BASE}/api/quran`);
+      if(!res.ok) throw new Error("bad response");
+      const data = await res.json();
+      document.getElementById("statusLine").innerHTML = '<span class="status-dot live"></span>متصل ببياناتك الحقيقية من Notion';
+      return data;
+    }catch(e){
+      document.getElementById("statusLine").innerHTML = '<span class="status-dot"></span>تعذر الاتصال بالخادم — عرض بيانات محلية';
+      return SAMPLE_DATA;
+    }
+  }
+  return SAMPLE_DATA;
+}
+
+loadData().then(items=>{
+  renderTabs(items);
+  render(items, "الكل");
+});
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load", ()=>{
+    navigator.serviceWorker.register("service-worker.js").catch(console.error);
+  });
+}
+
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt", (e)=>{
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById("installBtn").classList.add("show");
+});
+document.getElementById("installBtn").addEventListener("click", async ()=>{
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById("installBtn").classList.remove("show");
+});
+</script>
+</body>
+</html>
